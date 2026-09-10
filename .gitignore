@@ -3,3 +3,6 @@ node_modules/
 .env
 .env.local
 .DS_Store
+
+# Command Code session config, taste memory and local state — never commit.
+.commandcode/
