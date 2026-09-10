@@ -86,6 +86,9 @@ async function watchSingle(device, channelId) {
       channelId,
       type: 1,
     });
+    if (!kit?.kitToken) {
+      throw new Error("getKitToken returned no kitToken. Response: " + JSON.stringify(kit));
+    }
     // Build the imouPlayer config. The SDK's `code` field is the device
     // password or video-encryption key; we only pass it if the user has set
     // one in Settings — otherwise the SDK falls back to the device SN, which
@@ -106,7 +109,15 @@ async function watchSingle(device, channelId) {
       WasmLibPath: "/WasmLib/",
       controls: true,
       title: `${device.deviceName || device.deviceId} · CH${channelId}`,
-      handleError: (err) => console.error("[imou-player error]", err),
+      // Surface SDK errors visibly. errCode 1001 = decryption failed,
+      // 1002 = device exception, 1021 = failed to obtain playback address
+      // (usually means the camera isn't bound to the Open Platform app,
+      // or no PaaS / cloud-streaming entitlement).
+      handleError: (err) => {
+        const msg = `[imou-player] errCode=${err?.errCode} msg=${err?.errMsg || err?.description || JSON.stringify(err)}`;
+        console.error(msg, err);
+        banner(status, "error", `Player error ${err?.errCode ?? "?"}: ${err?.errMsg || err?.description || "see browser console"}`);
+      },
       handleCallBack: (e) => console.log("[imou-player]", e),
     };
     if (settings.deviceCode) playerConfig.code = settings.deviceCode;
