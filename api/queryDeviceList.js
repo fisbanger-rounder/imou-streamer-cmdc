@@ -13,10 +13,15 @@ export default async function handler(req, res) {
     const body = req.body || {};
     const creds = resolveCreds(body);
     const accessToken = await getCachedAccessToken(creds);
+    // Pagination: the official Python SDK sends integers (page=1, pageSize=10).
+    // We coerce to integers, default to 1/10, and send them as numbers because
+    // that's what the API expects. Sending page=0 returns OP1003 (invalid value).
+    const page = Math.max(1, parseInt(body.page, 10) || 1);
+    const pageSize = Math.min(100, Math.max(1, parseInt(body.pageSize, 10) || 10));
     const data = await callImou({
       method: "listDeviceDetailsByPage",
       ...creds,
-      params: { token: accessToken, page: body.page || 0, pageSize: body.pageSize || 50 },
+      params: { token: accessToken, page, pageSize },
     });
     return res.status(200).json(data);
   } catch (e) {
