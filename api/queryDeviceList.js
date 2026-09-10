@@ -14,7 +14,7 @@ export default async function handler(req, res) {
     const creds = resolveCreds(body);
     const accessToken = await getCachedAccessToken(creds);
     const data = await callImou({
-      method: "queryDeviceList",
+      method: "listDeviceDetailsByPage",
       ...creds,
       params: { token: accessToken, page: body.page || 0, pageSize: body.pageSize || 50 },
     });
