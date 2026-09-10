@@ -1,9 +1,10 @@
 // Multi-view grid: runs several imouPlayer instances side by side. The Cameras
 // page writes the pinned (device, channel) list to localStorage; this page
 // reads it and can autoplay via ?play=1.
-import { $, el, loadSettings, resolveDeviceCode, setDeviceCode, apiPost, banner } from "/app.js";
+import { $, el, loadSettings, resolveDeviceCode, setDeviceCode, apiCreds, apiPost, banner, queueKey } from "/app.js";
 
-const QUEUE_KEY = "imou-multi-view-queue";
+// Resolved once at module load: switching accounts reloads the page.
+const QUEUE_KEY = queueKey();
 // The vendor demo caps split-screen at 9; decode is CPU-heavy so more than
 // that gets choppy fast.
 const MAX_VIEWS = 9;
@@ -111,7 +112,7 @@ async function playCell(idx, entry) {
 
   try {
     const kit = await apiPost("/api/getKitToken", {
-      ...settings,
+      ...apiCreds(settings),
       deviceId: entry.deviceId,
       channelId: entry.channelId,
       // Permission type 0 = all permissions; type 1 (live only) breaks the

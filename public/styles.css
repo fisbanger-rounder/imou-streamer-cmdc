@@ -61,3 +61,12 @@ button:hover:not(:disabled) { filter: brightness(1.1); }
 .spacer { flex: 1; }
 .code-field { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
 .code-field input { font-size: 13px; padding: 6px 8px; }
+.account-wrap { display: inline-flex; align-items: center; gap: 6px; }
+.account-select { width: auto; padding: 5px 8px; font-size: 13px; background: #0f131b; color: var(--text); border: 1px solid var(--border); border-radius: 6px; }
+.account-manage { font-size: 12px; color: var(--muted); }
+.account-manage:hover { color: var(--text); }
+.account-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.account-row { display: flex; align-items: center; gap: 10px; background: #131720; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+.account-row.active { border-color: var(--accent); }
+.account-row .muted-note { margin-top: 2px; }
+.banner-warning { border-left: 3px solid var(--accent); padding-left: 10px; }

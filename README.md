@@ -1,9 +1,16 @@
 # Imou Streamer
 
-A web app that lists the cameras on your Imou Open Platform developer account
-and plays their live streams in the browser through the official `imou-player`
-SDK. Static frontend + Vercel serverless functions — the `appSecret` stays on
-the server, the browser only ever sees short-lived kit tokens.
+A web app that lists the cameras on your Imou Open Platform account(s) and plays
+their live streams in the browser through the official `imou-player` SDK.
+Static frontend + Vercel serverless functions that sign Imou's API requests and
+cache tokens.
+
+> **Security model, stated plainly:** credentials are supplied by the browser and
+> kept in `localStorage`, so the `appSecret` *does* exist client-side. The
+> serverless functions exist to sign requests and cache tokens, not to hide a
+> secret you've typed into a web page. Use this on a machine you trust. See
+> [Multiple accounts](#multiple-accounts) for the tradeoffs and the env-var
+> alternative.
 
 ## Features
 
@@ -14,7 +21,9 @@ the server, the browser only ever sees short-lived kit tokens.
 - SDK controls on the player: play, volume, snapshot, resolution switch, **PTZ**, fullscreen.
 - **Per-camera passwords.** Each device card has its own verification-code field; encrypted
   streams that fail decryption prompt inline and retry just that cell.
-- Credentials two ways: server env vars (recommended) or the Settings page (`localStorage`, for local dev).
+- **Multiple accounts.** Each Imou Open Platform app is a "profile" (its own appId,
+  appSecret, region, and camera passwords), switchable from the header.
+- Single-account alternative: set env vars and no browser credentials are needed.
 
 ## How it works
 
@@ -27,20 +36,22 @@ Browser ──new imouPlayer({ token: kitToken, domain: "https://openapi-…", �
         └─► WebSocket (RTSP-over-WS) to the returned media server, WASM-decoded to canvas
 ```
 
-The serverless functions exist to keep `appSecret` off the client and to cache
-the admin `accessToken`. Everything media-related (stream URLs, PTZ commands,
-the video WebSocket) is signed with the **kitToken** and goes straight from the
-browser to Imou — that's by SDK design.
+The serverless functions sign Imou's API requests (the signature needs the
+`appSecret`, which is why it can't happen in the page) and cache the 3-day
+`accessToken` per account. Everything media-related (stream URLs, PTZ commands,
+the video WebSocket) is authorized by the **kitToken** and goes straight from the
+browser to Imou — that's by SDK design, and Imou answers those cross-origin
+requests with `Access-Control-Allow-Origin: *`.
 
 ### Endpoints
 
 | Function | Imou method | Notes |
 | --- | --- | --- |
-| `api/accessToken.js` | `accessToken` | 3-day token, cached per server instance |
+| `api/accessToken.js` | `accessToken` | 3-day token, cached per account |
 | `api/queryDeviceList.js` | `listDeviceDetailsByPage` | `page` is **1-based**; returns `deviceList[]` with `channelList[]` |
 | `api/getKitToken.js` | `getKitToken` | 2h token; we request `type: 0` (all permissions) so PTZ works |
-| `api/lib/imou.js` | — | MD5 request signer, host normalization, `currentDomain` region redirect, token cache |
-| `api/lib/config.js` | — | env vars take precedence over request-body credentials |
+| `api/lib/imou.js` | — | MD5 request signer, per-account `currentDomain` region cache, per-account token cache |
+| `api/lib/config.js` | — | Request-body credentials win; env vars are the fallback |
 
 ## Run locally
 
@@ -51,9 +62,49 @@ vercel dev              # http://localhost:3000
 ```
 
 `vercel dev` reads `vercel.json`: serves `public/` as the site root, runs `api/*.js`
-as functions, and applies the same COOP/COEP headers as production. Either set
-`IMOU_APP_ID` / `IMOU_APP_SECRET` in a local `.env.local`, or open the app, go to
-**Settings**, and paste them there.
+as functions, and applies the same COOP/COEP headers as production. Then open
+<http://localhost:3000>, go to **Accounts**, and add your Imou app — or set
+`IMOU_APP_ID` / `IMOU_APP_SECRET` in `.env.local` to skip typing them.
+
+## Multiple accounts
+
+An "account" is one Imou Open Platform **app** (`appId` + `appSecret`), which owns
+its own device list, data-center region, and camera passwords. Add as many as you
+like under **Accounts** and switch from the dropdown in the header; devices,
+players, saved camera passwords, **and the multi-view pinboard** are all scoped to
+whichever account is active (the queue is stored under
+`imou-multi-view-queue:<profileId>`, since app A's cameras can't be streamed by
+app B). Profile shape, stored in `localStorage` under `imou-streamer-accounts`:
+
+```json
+{ "profiles": [{ "id": "…", "label": "Home", "appId": "lc…", "appSecret": "…",
+  "host": "https://openapi-sg.easy4ip.com", "defaultStream": "0",
+  "deviceCode": "", "deviceCodes": { "2306…": "camera-password" } }],
+  "activeId": "…" }
+```
+
+**Tradeoffs of browser-side credentials, stated honestly:**
+
+| | |
+| --- | --- |
+| ✅ | Unlimited accounts with no user system or database to build |
+| ✅ | Each visitor brings their own credentials; you never hold anyone's secret |
+| ✅ | More accounts = more device-channel quota and per-app rate-limit headroom |
+| ⚠️ | `appSecret` sits plaintext in `localStorage` indefinitely — any XSS in this app leaks every account in that browser |
+| ⚠️ | Whoever has that browser profile can list **all** cameras bound to the app, not just the pinned ones |
+| ⚠️ | Browser sync or a synced profile folder can copy `localStorage` without you noticing |
+| ⚠️ | No revocation or audit trail; **Delete** only forgets the profile from that browser |
+| ⚠️ | Your public deployment acts as a signing proxy for anyone who knows the URL (Imou still throttles per app) |
+
+**Want the secret server-only instead?** Set `IMOU_APP_ID` / `IMOU_APP_SECRET`;
+they apply whenever a request carries no credentials. Precedence here is
+deliberately **body wins** so multi-account works — to lock visitors out of
+substituting their own, flip the `||` order in `api/lib/config.js` and hide the
+account picker.
+
+To share with other people properly, you'd want per-user auth plus an encrypted
+credential store (Vercel Postgres/KV). The seams for that are already isolated
+behind `apiCreds()` (client) and `resolveCreds()` (server).
 
 ## Deploy to Vercel
 
@@ -62,15 +113,17 @@ as functions, and applies the same COOP/COEP headers as production. Either set
 2. **Add cameras** — devices must be bound to your Open Platform app (via Imou Life and/or `bindDevice`) to appear or stream.
 3. **Push this repo** to GitHub/GitLab/Bitbucket and import it at <https://vercel.com/new>.
    No framework preset, no build command — `vercel.json` drives everything.
-4. **Project Settings → Environment Variables**, add for Production (and Preview if you want):
+4. **Project Settings → Environment Variables** — **optional**, only if you want a
+   default account baked in rather than typed into the browser:
 
    | Name | Value |
    | --- | --- |
    | `IMOU_APP_ID` | your `lcxxxxxxxxxxxxxx` |
    | `IMOU_APP_SECRET` | your app secret (keep it private) |
-   | `IMOU_DATA_CENTER_HOST` | optional; defaults to `https://openapi-sg.easy4ip.com`. Other options: `openapi-fk` (Frankfurt), `openapi-or` (Oregon). Must match your app's data center. |
+   | `IMOU_DATA_CENTER_HOST` | defaults to `https://openapi-sg.easy4ip.com`. Other options: `openapi-fk` (Frankfurt), `openapi-or` (Oregon). Must match the app's data center. |
 
-5. **Deploy** — then **Redeploy** once after saving env vars so the functions pick them up.
+   With no env vars set, every visitor adds their own account under **Accounts**.
+5. **Deploy** — if you set env vars, **Redeploy** once afterwards so the functions pick them up.
 6. Open the URL → **Cameras** → **Watch live**. First frames appear in a few seconds.
 
 Locally and on Vercel the browser calls the Imou API cross-origin; we verified
@@ -84,17 +137,17 @@ api/
   accessToken.js           – admin token endpoint (also used internally)
   getKitToken.js           – per device/channel play token
   queryDeviceList.js       – device inventory
-  lib/imou.js              – MD5 signer, region redirect, token cache
-  lib/config.js            – env/body credential resolution
+  lib/imou.js              – MD5 signer, per-account region + token caches
+  lib/config.js            – body-credential resolution, env fallback
 public/
   index.html               – camera list page
   player.html              – multi-view grid
-  settings.html            – credentials + camera password + connection test
-  app.js                   – settings storage, API helper, tiny DOM helpers
+  settings.html            – account manager: add / edit / delete + connection test
+  app.js                   – profile store, settings, API helper, DOM helpers, header switcher
   styles.css               – app chrome (the SDK renders its own UI)
-  pages/devices.js         – list, Watch-live overlay, pin-to-multi-view
+  pages/devices.js         – list, per-camera passwords, Watch-live overlay, queueing
   pages/player.js          – grid lifecycle: render / playAll / pause / destroy
-  pages/settings.js        – settings persistence + /api/accessToken test
+  pages/settings.js        – account CRUD
   imou-player.js / .css    – official SDK, copied verbatim
   WasmLib/                 – official SDK decoder (MultiThread / SingleThread / AudioProcessor)
 vercel.json                – COOP/COEP headers, function sizing, / rewrite
@@ -147,9 +200,10 @@ These cost real debugging time; the official docs are wrong or silent on each.
 | `OP1003` from device list | `page`/`pageSize` missing or 0 |
 | `SN1001` / `SN1002` | `appSecret` mismatch / clock skew >5 min |
 | "Failed to obtain playback address" | `domain` missing `https://`, expired kitToken, or camera offline |
-| `1001` player error | Wrong camera password / encryption key in Settings → device code |
-| Empty camera list | Camera not bound to the Open Platform app |
-| Black cells in multi-view | Cell error text shows the reason; >4 streams or weak GPU also cause this |
+| `1001` player error | Wrong camera password — the cell/overlay prompts for it inline; otherwise fix it on the Cameras page |
+| Empty camera list | Cameras bound to a **different account** than the one selected in the header, or not bound to the Open Platform app at all |
+| `OP1005` only on one account | That profile's data-center host is wrong for the app |
+| Black cells in multi-view | Cell error text shows the reason; >9 streams or a weak GPU also cause this |
 
 ## Limitations
 
@@ -157,8 +211,12 @@ These cost real debugging time; the official docs are wrong or silent on each.
   canvas + WASM, so 6–9 cells needs a decent GPU/CPU and will lag on weak hardware.
 - Live view only; playback (type `2`) is wired into `getKitToken` but there are
   no date/time pickers yet.
-- Camera passwords are stored per browser (`localStorage`), keyed by deviceId.
-  Switch device or browser and you re-enter them; there is no account sync.
+- Accounts and camera passwords live in `localStorage`, per browser and per
+  profile. Switch device or browser and you re-enter everything; there is no
+  sync, and nothing is encrypted at rest.
+- Token and region caches are in-process, so they only help within one warm
+  serverless instance. Heavy multi-account use across regions would want a shared
+  store (Vercel KV / Upstash) to avoid re-minting accessTokens.
 - iOS Safari mutes autoplayed streams until unmuted manually; WeChat's embedded
   browser has no snapshot/record buttons. Both are SDK constraints.
 - Unfree (console-verified) devices and accounts without device-channel quota

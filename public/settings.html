@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Settings · Imou Streamer</title>
+  <title>Accounts · Imou Streamer</title>
   <link rel="stylesheet" href="/imou-player.css" />
   <link rel="stylesheet" href="/styles.css" />
   <script type="module" src="/pages/settings.js"></script>
@@ -14,21 +14,41 @@
     <nav>
       <a href="/">Cameras</a>
       <a href="/player.html">Multi-view</a>
-      <a href="/settings.html" class="active">Settings</a>
+      <a href="/settings.html" class="active">Accounts</a>
     </nav>
   </header>
   <main>
     <section class="card">
-      <h2>Imou Open Platform credentials</h2>
+      <div class="row">
+        <h2 style="margin:0; flex:1">Imou accounts</h2>
+        <button id="add-account">Add account</button>
+      </div>
       <div id="status"></div>
-      <p class="muted-note">
-        Get <span class="kbd">appId</span> and <span class="kbd">appSecret</span> from
-        <a href="https://open.imoulife.com/consoleNew/myApp/appInfo" target="_blank" rel="noreferrer">Console → My Apps → App Info</a>.
-        On Vercel, prefer setting <span class="kbd">IMOU_APP_ID</span> /
-        <span class="kbd">IMOU_APP_SECRET</span> as project env vars instead of
-        entering them here — that keeps the secret off the browser.
+      <p class="muted-note banner-warning">
+        Each account here is an Imou Open Platform app (<span class="kbd">appId</span> +
+        <span class="kbd">appSecret</span>). Everything is stored in <strong>this browser only</strong>
+        (localStorage), unencrypted, and sent to the serverless functions with each request —
+        fine on a machine you trust, not on a shared one. Camera passwords are kept per account,
+        and so is the data-center region.
       </p>
+      <div id="account-list" class="account-list"></div>
+    </section>
+
+    <section class="card" id="details-card">
+      <h2 id="details-title">Account details</h2>
       <form id="form">
+        <div class="row">
+          <label>Display name
+            <input name="label" placeholder="Home, Office, Warehouse…" autocomplete="off" />
+          </label>
+          <label>API host (data center)
+            <select name="host">
+              <option value="https://openapi-sg.easy4ip.com">Singapore (East Asia)</option>
+              <option value="https://openapi-fk.easy4ip.com">Frankfurt (Central Europe)</option>
+              <option value="https://openapi-or.easy4ip.com">Oregon (West US)</option>
+            </select>
+          </label>
+        </div>
         <div class="row">
           <label>App ID
             <input name="appId" placeholder="lcxxxxxxxxxxxxxx" autocomplete="off" />
@@ -38,39 +58,33 @@
           </label>
         </div>
         <div class="row">
-          <label>Default camera password (fallback)
-            <input name="deviceCode" type="password" placeholder="Leave blank unless all your cameras share one password" autocomplete="off" />
-          </label>
-        </div>
-        <p class="muted-note">
-          Prefer setting passwords per camera on the <a href="/">Cameras</a> page —
-          this field only applies to cameras that have no password of their own saved.
-        </p>
-        <div class="row">
-          <label>API host (data center)
-            <select name="host">
-              <option value="https://openapi-sg.easy4ip.com">Singapore (East Asia)</option>
-              <option value="https://openapi-fk.easy4ip.com">Frankfurt (Central Europe)</option>
-              <option value="https://openapi-or.easy4ip.com">Oregon (West US)</option>
-            </select>
-          </label>
-          <label>Default stream quality
+          <label>Default quality
             <select name="defaultStream">
               <option value="0">HD (streamId=0)</option>
               <option value="1">SD (streamId=1)</option>
             </select>
           </label>
+          <label>Default camera password (fallback)
+            <input name="deviceCode" type="password" placeholder="Only if every camera shares one password" autocomplete="off" />
+          </label>
         </div>
+        <p class="muted-note">
+          Get <span class="kbd">appId</span> / <span class="kbd">appSecret</span> from
+          <a href="https://open.imoulife.com/consoleNew/myApp/appInfo" target="_blank" rel="noreferrer">Console → My Apps → App Info</a>.
+          Pick the data center your app actually belongs to (Console → Basic Info → My Info) —
+          the wrong one returns <span class="kbd">OP1005</span>. Per-camera passwords live on the
+          <a href="/">Cameras</a> page.
+        </p>
         <div class="row">
-          <button type="submit">Save</button>
-          <button type="button" class="ghost" id="clear">Clear</button>
+          <button type="submit">Save account</button>
+          <button type="button" class="ghost" id="cancel-edit">Discard changes</button>
         </div>
       </form>
     </section>
 
     <section class="card">
       <h2>Connection check</h2>
-      <p class="muted-note">Tests that the server can reach Imou with your settings.</p>
+      <p class="muted-note">Tests the account currently selected in the header against Imou.</p>
       <div class="row">
         <button id="test">Test connection</button>
         <span id="test-result" class="muted-note"></span>

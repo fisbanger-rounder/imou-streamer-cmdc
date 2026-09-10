@@ -1,8 +1,9 @@
 // Cameras index page: lists every device under the developer account with a
 // per-camera password field, and offers Watch-live / pin-to-multi-view actions.
-import { $, el, loadSettings, saveSettings, resolveDeviceCode, setDeviceCode, apiPost, banner } from "/app.js";
+import { $, el, loadSettings, saveSettings, resolveDeviceCode, setDeviceCode, apiCreds, apiPost, banner, queueKey } from "/app.js";
 
-const QUEUE_KEY = "imou-multi-view-queue";
+// Resolved once at module load: switching accounts reloads the page.
+const QUEUE_KEY = queueKey();
 const MAX_VIEWS = 9;
 
 const list = $("#device-list");
@@ -16,7 +17,7 @@ async function refresh() {
   settings = loadSettings();
   banner(status, "info", "Loading devices…");
   try {
-    const data = await apiPost("/api/queryDeviceList", settings);
+    const data = await apiPost("/api/queryDeviceList", apiCreds(settings));
     // The Imou API returns { deviceList: [...] }; each device carries
     // { deviceId, deviceName, deviceStatus, channelList } and deviceStatus is
     // the string "1" (online) / "0" (offline).
@@ -109,7 +110,7 @@ async function watchSingle(device, channelId) {
   async function start() {
     try {
       const kit = await apiPost("/api/getKitToken", {
-        ...settings,
+        ...apiCreds(settings),
         deviceId: device.deviceId,
         channelId,
         // Permission type 0 = all permissions; type 1 (live only) makes the
@@ -226,10 +227,9 @@ function openAllInMultiView() {
 $("#refresh").addEventListener("click", refresh);
 $("#open-all").addEventListener("click", openAllInMultiView);
 $("#clear-codes").addEventListener("click", () => {
-  const s = loadSettings();
-  s.deviceCodes = {};
-  saveSettings(s);
-  banner(status, "info", "Saved camera passwords cleared.");
+  saveSettings({ deviceCodes: {} });
+  settings = loadSettings();
+  banner(status, "info", "Saved camera passwords cleared for this account.");
   refresh();
 });
 refresh();
