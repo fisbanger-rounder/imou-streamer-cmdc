@@ -86,7 +86,11 @@ async function watchSingle(device, channelId) {
       channelId,
       type: 1,
     });
-    player = new imouPlayer({
+    // Build the imouPlayer config. The SDK's `code` field is the device
+    // password or video-encryption key; we only pass it if the user has set
+    // one in Settings — otherwise the SDK falls back to the device SN, which
+    // is the documented default for unencrypted cameras.
+    const playerConfig = {
       id: container.id,
       width: container.clientWidth || 1200,
       height: container.clientHeight || 675,
@@ -104,7 +108,9 @@ async function watchSingle(device, channelId) {
       title: `${device.deviceName || device.deviceId} · CH${channelId}`,
       handleError: (err) => console.error("[imou-player error]", err),
       handleCallBack: (e) => console.log("[imou-player]", e),
-    });
+    };
+    if (settings.deviceCode) playerConfig.code = settings.deviceCode;
+    const player = new imouPlayer(playerConfig);
   } catch (e) {
     container.remove();
     banner(status, "error", "Cannot start stream: " + e.message);

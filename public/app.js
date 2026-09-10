@@ -10,6 +10,12 @@ const DEFAULT_SETTINGS = {
   appSecret: "",
   host: "https://openapi-sg.easy4ip.com",
   defaultStream: "0", // 0 = HD, 1 = SD
+  // Device verification code (camera password / video-encryption key).
+  // Per SDK docs: "If the device has set a custom audio and video encryption
+  // key, enter that key. If only a Device Password is set, enter the device
+  // password. Otherwise the default device SN is used." Most users with a
+  // custom camera password should paste it here.
+  deviceCode: "",
 };
 
 export function loadSettings() {

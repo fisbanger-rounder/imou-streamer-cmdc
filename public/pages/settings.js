@@ -7,6 +7,7 @@ const testResult = $("#test-result");
 const current = loadSettings();
 form.appId.value = current.appId || "";
 form.appSecret.value = current.appSecret || "";
+form.deviceCode.value = current.deviceCode || "";
 form.host.value = current.host;
 form.defaultStream.value = current.defaultStream || "0";
 
@@ -17,6 +18,7 @@ form.addEventListener("submit", (e) => {
     appSecret: form.appSecret.value.trim(),
     host: form.host.value,
     defaultStream: form.defaultStream.value,
+    deviceCode: form.deviceCode.value,
   };
   saveSettings(data);
   const ok = banner(status, "ok", "Saved. Reload the Cameras page to pick up changes.");

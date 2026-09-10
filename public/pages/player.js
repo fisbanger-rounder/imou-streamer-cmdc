@@ -80,7 +80,7 @@ async function playAll() {
         channelId: entry.channelId,
         type: 1,
       });
-      const player = new imouPlayer({
+      const playerConfig = {
         id: stage.id,
         width: stage.clientWidth || 640,
         height: stage.clientHeight || 360,
@@ -97,7 +97,9 @@ async function playAll() {
         controlsConfig: ["play", "volume", "capture", "resolution", "fullScreen"],
         title: `${entry.deviceName} · CH${entry.channelId}`,
         handleError: (err) => console.error(`[imou-player ${i}]`, err),
-      });
+      };
+      if (settings.deviceCode) playerConfig.code = settings.deviceCode;
+      const player = new imouPlayer(playerConfig);
       players.set(i, player);
     } catch (e) {
       stage.innerHTML = `<div style="color:#e0596b;padding:12px;font-size:13px;">Cannot start ${entry.deviceName}: ${e.message}</div>`;
