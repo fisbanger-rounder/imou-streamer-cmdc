@@ -93,7 +93,9 @@ async function playAll() {
         ...settings,
         deviceId: entry.deviceId,
         channelId: entry.channelId,
-        type: 1,
+        // Permission type 0 = all permissions. Type 1 (live view only) makes
+        // the SDK's controlMovePTZByKitToken call fail, so we always ask for 0.
+        type: 0,
       });
       if (!kit?.kitToken) {
         throw new Error("getKitToken returned no kitToken: " + JSON.stringify(kit));
@@ -116,7 +118,7 @@ async function playAll() {
         domain: (settings.host || "").replace(/\/+$/, ""),
         WasmLibPath: "",
         controls: true,
-        controlsConfig: ["play", "volume", "capture", "resolution", "fullScreen"],
+        controlsConfig: ["play", "volume", "capture", "resolution", "ptz", "fullScreen"],
         title: `${entry.deviceName} · CH${entry.channelId}`,
         handleError: (err) => {
           console.error(`[imou-player ${i}]`, err);

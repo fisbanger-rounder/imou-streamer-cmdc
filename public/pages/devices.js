@@ -84,7 +84,9 @@ async function watchSingle(device, channelId) {
       ...settings,
       deviceId: device.deviceId,
       channelId,
-      type: 1,
+      // Permission type 0 = all permissions. Type 1 (live view only) makes the
+      // SDK's controlMovePTZByKitToken call fail, so we always ask for 0.
+      type: 0,
     });
     if (!kit?.kitToken) {
       throw new Error("getKitToken returned no kitToken. Response: " + JSON.stringify(kit));
