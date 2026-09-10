@@ -98,6 +98,10 @@ vercel.json            – routing, COOP/COEP, function runtime
 
 ## Limitations & notes
 
+- **`domain` must include the `https://` scheme.** The SDK builds its
+  stream-URL request as `${domain}/openapi/getEncryptKitStreamUrl`; a bare
+  hostname becomes a relative URL against your own origin and 404s with
+  "Failed to obtain playback address".
 - **Channel limit.** Up to 4 simultaneous streams — the SDK renders to canvas
   with stream decryption, so beyond 4 things get choppy. This matches the
   Imou demo.

@@ -89,9 +89,10 @@ async function playAll() {
         token: kit.kitToken,
         type: 1,
         streamId: Number(settings.defaultStream || 0),
-        // imouPlayer derives the WebSocket media server from `domain`. Pass
-        // the bare host (no scheme) of the configured data center.
-        domain: (settings.host || "").replace(/^https?:\/\//i, "").replace(/\/+$/, ""),
+        // imouPlayer concatenates `domain` directly with /openapi/... paths,
+        // so it MUST include the https:// scheme — otherwise the browser treats
+        // it as a relative URL against our own origin and the stream-URL request 404s.
+        domain: (settings.host || "").replace(/\/+$/, ""),
         WasmLibPath: "",
         controls: true,
         controlsConfig: ["play", "volume", "capture", "resolution", "fullScreen"],
