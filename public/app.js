@@ -262,8 +262,7 @@ function mountAccountBar() {
       select.appendChild(el("option", { value: p.id, selected: p.id === active?.id ? "selected" : null }, p.label || p.appId || "Account"));
     }
   }
-  const manage = el("a", { href: "/settings.html", class: "account-manage", title: "Manage accounts" }, "Accounts");
-  nav.insertBefore(el("span", { class: "account-wrap" }, [select, manage]), nav.firstChild);
+  nav.insertBefore(select, nav.firstChild);
 }
 
 if (document.readyState === "loading") {

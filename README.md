@@ -180,7 +180,7 @@ These cost real debugging time; the official docs are wrong or silent on each.
   needs `"ptz"` in `controlsConfig` to render the control.
 - **Encrypted cameras need the `code` option, per device.** Camera passwords are
   stored in `settings.deviceCodes[deviceId]` and resolved by
-  `resolveDeviceCode()` in `public/app.js`, falling back to the Settings page's
+  `resolveDeviceCode()` in `public/app.js`, falling back to the account's
   "default camera password" and then to the SDK's device-SN default. Both player
   call sites prompt again on error `1001` (decryption failed) and retry.
 - **COOP/COEP headers are required for multithreaded H.265 decoding** and match
