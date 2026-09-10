@@ -95,6 +95,10 @@ async function watchSingle(device, channelId) {
       token: kit.kitToken,
       type: 1,
       streamId: Number(settings.defaultStream || 0),
+      // imouPlayer derives the WebSocket media server from `domain`. We pass
+      // the bare host (no scheme) of the configured data center so it lands
+      // on the right regional streaming cluster.
+      domain: (settings.host || "").replace(/^https?:\/\//i, "").replace(/\/+$/, ""),
       WasmLibPath: "/WasmLib/",
       controls: true,
       title: `${device.deviceName || device.deviceId} · CH${channelId}`,
