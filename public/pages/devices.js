@@ -106,7 +106,7 @@ async function watchSingle(device, channelId) {
       // the bare host (no scheme) of the configured data center so it lands
       // on the right regional streaming cluster.
       domain: (settings.host || "").replace(/^https?:\/\//i, "").replace(/\/+$/, ""),
-      WasmLibPath: "/WasmLib/",
+      WasmLibPath: "",
       controls: true,
       title: `${device.deviceName || device.deviceId} · CH${channelId}`,
       // Surface SDK errors visibly. errCode 1001 = decryption failed,
