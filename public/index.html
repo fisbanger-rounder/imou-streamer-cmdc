@@ -22,10 +22,18 @@
     <section class="card">
       <div class="row">
         <h2 style="margin:0; flex:1">Your cameras</h2>
-        <button id="refresh">Refresh</button>
+        <button id="open-all">Play all in multi-view</button>
+        <button id="refresh" class="ghost">Refresh</button>
       </div>
+      <p class="muted-note">
+        Enter a camera's password once and it is saved for that device only — different
+        cameras can each have their own. Leave it blank for cameras with no encryption.
+      </p>
       <div id="status"></div>
       <div id="device-list" class="device-grid"></div>
+      <div class="row" style="margin-top:14px">
+        <button id="clear-codes" class="ghost">Clear saved camera passwords</button>
+      </div>
     </section>
   </main>
 </body>

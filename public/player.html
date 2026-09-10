@@ -22,8 +22,10 @@
     <section class="card">
       <h2>Multi-camera view</h2>
       <p class="muted-note">
-        Click any camera on the Cameras page → "Open in multi-view" to pin it, then press
-        <strong>Play all</strong>. Up to 4 streams at once (browser performance limit).
+        Pin cameras from the Cameras page ("Multi-view"), or hit
+        <strong>Play all in multi-view</strong> there to load every channel at once.
+        Each cell uses that camera's own saved password. Up to 9 streams; more cells
+        means more CPU.
       </p>
       <div class="row toolbar">
         <button id="play-all">Play all</button>
@@ -32,9 +34,11 @@
         <label style="flex:0 0 160px">Layout
           <select id="layout">
             <option value="1">1-up</option>
-            <option value="2" selected>2-up</option>
+            <option value="2">2-up</option>
             <option value="3">3-up</option>
-            <option value="4">4-up</option>
+            <option value="4" selected>4-up (2×2)</option>
+            <option value="6">6-up (2×3)</option>
+            <option value="9">9-up (3×3)</option>
           </select>
         </label>
         <span class="spacer"></span>

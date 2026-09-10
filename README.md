@@ -9,9 +9,11 @@ the server, the browser only ever sees short-lived kit tokens.
 
 - Lists every camera and channel bound to your developer account, with online status.
 - **Watch live** — full-screen overlay streaming one camera.
-- **Multi-view** — 1/2/3/4-up grid, Play all / Pause all / Destroy all, per-cell errors.
+- **Multi-view** — 1/2/3/4/6/9-up grid (2×2, 2×3, 3×3), Play all / Pause all / Destroy all, per-cell errors.
+- **Play all in multi-view** — one click queues every channel and autoplays the wall.
 - SDK controls on the player: play, volume, snapshot, resolution switch, **PTZ**, fullscreen.
-- **Camera password** support (video-encryption `code`) via the Settings page.
+- **Per-camera passwords.** Each device card has its own verification-code field; encrypted
+  streams that fail decryption prompt inline and retry just that cell.
 - Credentials two ways: server env vars (recommended) or the Settings page (`localStorage`, for local dev).
 
 ## How it works
@@ -123,9 +125,11 @@ These cost real debugging time; the official docs are wrong or silent on each.
 - **PTZ needs kit-token permission `type: 0`** (all). `type: 1` (live only)
   streams fine but silently rejects `controlMovePTZByKitToken`. The player also
   needs `"ptz"` in `controlsConfig` to render the control.
-- **Encrypted cameras need the `code` option.** The Settings page stores it as
-  `deviceCode` and both player call sites pass it through when set; blank means
-  the SDK falls back to the device SN.
+- **Encrypted cameras need the `code` option, per device.** Camera passwords are
+  stored in `settings.deviceCodes[deviceId]` and resolved by
+  `resolveDeviceCode()` in `public/app.js`, falling back to the Settings page's
+  "default camera password" and then to the SDK's device-SN default. Both player
+  call sites prompt again on error `1001` (decryption failed) and retry.
 - **COOP/COEP headers are required for multithreaded H.265 decoding** and match
   Imou's own hosted demo; they're set in `vercel.json`. Without them the SDK
   drops to single-thread decoding — still works, just heavier on the CPU.
@@ -149,11 +153,12 @@ These cost real debugging time; the official docs are wrong or silent on each.
 
 ## Limitations
 
-- Max 4 concurrent streams (SDK canvas decode is expensive).
+- Max 9 concurrent streams (the vendor demo's split-screen ceiling); decode is
+  canvas + WASM, so 6–9 cells needs a decent GPU/CPU and will lag on weak hardware.
 - Live view only; playback (type `2`) is wired into `getKitToken` but there are
   no date/time pickers yet.
-- One global camera password — per-camera codes would need a small Settings
-  redesign.
+- Camera passwords are stored per browser (`localStorage`), keyed by deviceId.
+  Switch device or browser and you re-enter them; there is no account sync.
 - iOS Safari mutes autoplayed streams until unmuted manually; WeChat's embedded
   browser has no snapshot/record buttons. Both are SDK constraints.
 - Unfree (console-verified) devices and accounts without device-channel quota

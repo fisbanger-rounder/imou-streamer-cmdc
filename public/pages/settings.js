@@ -13,14 +13,16 @@ form.defaultStream.value = current.defaultStream || "0";
 
 form.addEventListener("submit", (e) => {
   e.preventDefault();
-  const data = {
+  // Merge, not replace: the per-camera passwords in `deviceCodes` are edited
+  // from the Cameras page and must survive a Settings save.
+  saveSettings({
+    ...loadSettings(),
     appId: form.appId.value.trim(),
     appSecret: form.appSecret.value.trim(),
     host: form.host.value,
     defaultStream: form.defaultStream.value,
     deviceCode: form.deviceCode.value,
-  };
-  saveSettings(data);
+  });
   const ok = banner(status, "ok", "Saved. Reload the Cameras page to pick up changes.");
 });
 

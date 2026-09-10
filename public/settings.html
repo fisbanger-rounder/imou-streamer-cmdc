@@ -38,10 +38,14 @@
           </label>
         </div>
         <div class="row">
-          <label>Camera password / device code
-            <input name="deviceCode" type="password" placeholder="Leave blank unless your camera has a custom password or video-encryption key" autocomplete="off" />
+          <label>Default camera password (fallback)
+            <input name="deviceCode" type="password" placeholder="Leave blank unless all your cameras share one password" autocomplete="off" />
           </label>
         </div>
+        <p class="muted-note">
+          Prefer setting passwords per camera on the <a href="/">Cameras</a> page —
+          this field only applies to cameras that have no password of their own saved.
+        </p>
         <div class="row">
           <label>API host (data center)
             <select name="host">

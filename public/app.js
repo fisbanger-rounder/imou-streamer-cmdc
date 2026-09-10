@@ -10,12 +10,14 @@ const DEFAULT_SETTINGS = {
   appSecret: "",
   host: "https://openapi-sg.easy4ip.com",
   defaultStream: "0", // 0 = HD, 1 = SD
-  // Device verification code (camera password / video-encryption key).
-  // Per SDK docs: "If the device has set a custom audio and video encryption
-  // key, enter that key. If only a Device Password is set, enter the device
-  // password. Otherwise the default device SN is used." Most users with a
-  // custom camera password should paste it here.
+  // Fallback device code (camera password / video-encryption key), used only
+  // when a camera has no per-device entry in `deviceCodes`.
   deviceCode: "",
+  // Per-camera passwords, keyed by deviceId: { "2306...": "mypassword" }.
+  // Imou's verification code is per physical device, so this is the right key.
+  // Per the SDK docs: custom encryption key if one was set, otherwise the
+  // device password, otherwise the SDK falls back to the device SN.
+  deviceCodes: {},
 };
 
 export function loadSettings() {
@@ -30,6 +32,23 @@ export function loadSettings() {
 
 export function saveSettings(settings) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+}
+
+// Password resolution order: this exact device's stored code, then the global
+// fallback from Settings, then "" (empty means "let the SDK use the device SN").
+export function resolveDeviceCode(settings, deviceId) {
+  const perDevice = settings?.deviceCodes?.[deviceId];
+  if (perDevice) return perDevice;
+  return settings?.deviceCode || "";
+}
+
+export function setDeviceCode(deviceId, code) {
+  const s = loadSettings();
+  s.deviceCodes = { ...(s.deviceCodes || {}) };
+  if (code) s.deviceCodes[deviceId] = code;
+  else delete s.deviceCodes[deviceId];
+  saveSettings(s);
+  return s;
 }
 
 export function hasServerCredentials() {
