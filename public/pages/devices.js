@@ -11,7 +11,10 @@ async function refresh() {
   try {
     const settings = loadSettings();
     const data = await apiPost("/api/queryDeviceList", settings);
-    const devices = data.devices || [];
+    // The Imou API returns { deviceList: [...] }, not { devices: [...] }.
+    // Each device has { deviceId, deviceName, deviceStatus, channelList }.
+    // deviceStatus is "1" for online, "0" for offline.
+    const devices = Array.isArray(data.deviceList) ? data.deviceList : [];
     if (!devices.length) {
       banner(status, "info", "No devices found on this account. Add an Imou camera in the Imou Life app first.");
       return;
@@ -26,12 +29,16 @@ async function refresh() {
 }
 
 function renderDevice(d) {
-  const channels = Array.isArray(d.channels) ? d.channels : [];
-  // Device shape: { deviceId, deviceName, status: 'online' | 'offline', channels: [{ channelId, channelName }] }
+  const channels = Array.isArray(d.channelList) ? d.channelList : [];
+  // If deviceStatus is missing, fall back to "unknown" rather than guessing.
+  const online = d.deviceStatus === "1";
+  const offline = d.deviceStatus === "0";
   const card = el("div", { class: "device" }, [
     el("h3", {}, d.deviceName || d.deviceId || "Unnamed device"),
     el("div", { class: "meta" }, d.deviceId || ""),
-    el("div", {}, el("span", { class: `status ${d.status === "online" ? "online" : "offline"}` }, d.status || "unknown")),
+    el("div", {}, el("span", {
+      class: `status ${online ? "online" : offline ? "offline" : ""}`,
+    }, online ? "online" : offline ? "offline" : (d.deviceStatus || "unknown"))),
   ]);
 
   if (!channels.length) {
