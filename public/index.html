@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Imou Streamer</title>
+  <link rel="stylesheet" href="/imou-player.css" />
+  <link rel="stylesheet" href="/styles.css" />
+  <script type="module" src="/imou-player.js"></script>
+  <script type="module" src="/pages/devices.js"></script>
+</head>
+<body>
+  <header class="top">
+    <h1>Imou Streamer</h1>
+    <nav>
+      <a href="/" class="active">Cameras</a>
+      <a href="/player.html">Multi-view</a>
+      <a href="/settings.html">Settings</a>
+    </nav>
+  </header>
+  <main>
+    <section class="card">
+      <div class="row">
+        <h2 style="margin:0; flex:1">Your cameras</h2>
+        <button id="refresh">Refresh</button>
+      </div>
+      <div id="status"></div>
+      <div id="device-list" class="device-grid"></div>
+    </section>
+  </main>
+</body>
+</html>

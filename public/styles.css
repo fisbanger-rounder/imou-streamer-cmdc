@@ -1,0 +1,61 @@
+/* Layout only — the imouPlayer SDK injects its own UI inside the player divs. */
+:root {
+  --bg: #0f1115;
+  --panel: #181b22;
+  --border: #2a2f3a;
+  --text: #e7e9ee;
+  --muted: #8b93a3;
+  --accent: #f18d00;
+  --danger: #e0596b;
+  --ok: #4caf50;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: -apple-system, "Segoe UI", Roboto, sans-serif; min-height: 100%; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+header.top {
+  display: flex; align-items: center; gap: 16px;
+  padding: 12px 20px; background: var(--panel); border-bottom: 1px solid var(--border);
+}
+header.top h1 { margin: 0; font-size: 18px; font-weight: 600; }
+header.top nav { display: flex; gap: 12px; margin-left: auto; }
+header.top nav a { color: var(--text); padding: 6px 10px; border-radius: 6px; }
+header.top nav a.active, header.top nav a:hover { background: #232834; }
+main { padding: 20px; max-width: 1400px; margin: 0 auto; }
+.card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin-bottom: 18px; }
+.card h2 { margin: 0 0 12px 0; font-size: 16px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 10px; }
+label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); flex: 1 1 220px; }
+input, select, textarea {
+  background: #0f131b; border: 1px solid var(--border); color: var(--text);
+  padding: 8px 10px; border-radius: 6px; font: inherit; width: 100%;
+}
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+button {
+  background: var(--accent); color: #1a1a1a; border: none; padding: 9px 16px;
+  border-radius: 6px; font-weight: 600; cursor: pointer; font: inherit;
+}
+button.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+button.danger { background: var(--danger); color: white; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+button:hover:not(:disabled) { filter: brightness(1.1); }
+.device-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.device { background: #131720; border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+.device h3 { margin: 0 0 4px 0; font-size: 14px; }
+.device .meta { color: var(--muted); font-size: 12px; margin-bottom: 10px; word-break: break-all; }
+.status { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; }
+.status.online { background: rgba(76, 175, 80, 0.18); color: var(--ok); }
+.status.offline { background: rgba(139, 147, 163, 0.2); color: var(--muted); }
+.banner { padding: 10px 14px; border-radius: 6px; margin-bottom: 14px; font-size: 14px; }
+.banner.info { background: #1d2a3a; color: #b6d4ff; border: 1px solid #2c4565; }
+.banner.error { background: #3a1d22; color: #ffb6c0; border: 1px solid #5e2c34; }
+.banner.ok { background: #1d3a23; color: #b6ffc0; border: 1px solid #2c5e34; }
+.player-grid { display: grid; gap: 12px; }
+.player-cell { background: black; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; position: relative; }
+.player-cell .label { padding: 8px 12px; font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; align-items: center; background: #0a0d12; }
+.player-cell .label button { padding: 4px 8px; font-size: 12px; }
+.player-cell .stage { width: 100%; aspect-ratio: 16 / 9; }
+.muted-note { color: var(--muted); font-size: 12px; margin-top: 6px; }
+.kbd { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; background: #0a0d12; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border); font-size: 12px; }
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.spacer { flex: 1; }

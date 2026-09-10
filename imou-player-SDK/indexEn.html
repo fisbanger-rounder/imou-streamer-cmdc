@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>imouPlayer</title>
+  <script type="module" src="./imou-player.js"></script>
+  <link rel="stylesheet" href="./imou-player.css">
+  <script defer src="./indexEn.js"></script>
+</head>
+<style>
+  body{
+    margin: 0;
+    padding: 8px;
+  }
+  #playerForm {
+    margin-bottom: 20px;
+    display: flex;
+    width: 800px;
+    flex-wrap: wrap;
+  }
+
+  #playerForm>div {
+    width: 800px;
+    height: 20px;
+    display: flex;
+    margin-bottom: 5px;
+    font-size: 16px;
+    line-height: 1;
+  }
+
+  #playerForm>div>span {
+    width: 300px;
+    font-size: 16px;
+    line-height: 1;
+  }
+
+  #playerForm>div>input {
+    display: block;
+    width: 300px;
+    font-size: 16px;
+    line-height: 1;
+    height: 20px;
+    transform: translateZ(0);
+    outline: none;
+  }
+
+  #start {
+    float: left;
+  }
+
+  .inputLabel {
+    display: inline-block;
+    min-width: 300px;
+  }
+
+  .inputSpan {
+    display: inline-block;
+    margin-left: -40px;
+  }
+</style>
+<body>
+  <form id="playerForm">
+    <div>
+      <span>domain</span>
+      <input id="domain" placeholder="Place Enter Domain Name" value="" name="domain" />
+    </div>
+    <div>
+      <span>deviceId</span>
+      <input id="deviceId" placeholder="deviceId" value="" name="deviceId" />
+    </div>    
+    <div>
+      <span>channelId</span>
+      <input id="channelId" placeholder="channelId" value="0" name="channelId" />
+    </div>
+    <div>
+      <span>kitToken</span>
+      <input id="kitToken" placeholder="kitToken" value="" name="kitToken" />
+    </div>
+
+    <div>
+      <span class="inputLabel" name="streamId">Resolution</span>
+      <span style="display:inline-block;height:100%;line-height:100%;">
+        <input id="streamId0" value="0" name="streamId" type="radio" checked />
+        <label for="streamId0">HD</label>
+      </span>
+      <span class="inputSpan">
+        <input id="streamId1" value="1" name="streamId" type="radio" />
+        <label for="streamId1">SD</label>
+      </span>
+    </div>
+    <div>
+      <span class="inputLabel" name="type">Play type</span>
+      <span style="display:inline-block;height:100%;line-height:100%;">
+        <input id="type1" value="1" name="type" type="radio" checked />
+        <label for="type1">Live</label>
+      </span>
+      <span class="inputSpan">
+        <input id="type2" value="2" name="type" type="radio" />
+        <label for="type2">Recording playback</label>
+      </span>
+    </div>
+    <div>
+      <span class="inputLabel">Recording type</span>
+      <span>
+        <input id="recordType0" value="cloud" name="recordType" type="radio" checked />
+        <label for="recordType0">Cloud recording</label>
+      </span>
+      <span class="inputSpan">
+        <input id="recordType1" value="localRecord" name="recordType" type="radio" />
+        <label for="recordType1">Local recording</label>
+      </span>
+      <span class="inputSpan">
+        <input id="recordType2" value="nvrDisk" name="recordType" type="radio" />
+        <label for="recordType2">NVR recording</label>
+      </span>
+    </div>
+    <div>
+      <span>Encryption Key</span>
+      <input id="code" placeholder="" value="" name="code" />
+    </div>
+    <button id="start" >Start play</button>
+    <button id="new" style="margin-left:20px;">Add multiple screens</button>
+    <button id="fullPage" style="margin-left:20px;">Full screen</button>
+  </form>
+  <div id="inputs">
+
+  </div>
+  <div id="root" style="display:grid;width:1800px;flex-flow:row wrap;height:900px;"></div>
+</body>
+
+</html>

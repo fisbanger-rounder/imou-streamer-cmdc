@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Settings · Imou Streamer</title>
+  <link rel="stylesheet" href="/imou-player.css" />
+  <link rel="stylesheet" href="/styles.css" />
+  <script type="module" src="/pages/settings.js"></script>
+</head>
+<body>
+  <header class="top">
+    <h1>Imou Streamer</h1>
+    <nav>
+      <a href="/">Cameras</a>
+      <a href="/player.html">Multi-view</a>
+      <a href="/settings.html" class="active">Settings</a>
+    </nav>
+  </header>
+  <main>
+    <section class="card">
+      <h2>Imou Open Platform credentials</h2>
+      <div id="status"></div>
+      <p class="muted-note">
+        Get <span class="kbd">appId</span> and <span class="kbd">appSecret</span> from
+        <a href="https://open.imoulife.com/consoleNew/myApp/appInfo" target="_blank" rel="noreferrer">Console → My Apps → App Info</a>.
+        On Vercel, prefer setting <span class="kbd">IMOU_APP_ID</span> /
+        <span class="kbd">IMOU_APP_SECRET</span> as project env vars instead of
+        entering them here — that keeps the secret off the browser.
+      </p>
+      <form id="form">
+        <div class="row">
+          <label>App ID
+            <input name="appId" placeholder="lcxxxxxxxxxxxxxx" autocomplete="off" />
+          </label>
+          <label>App Secret
+            <input name="appSecret" type="password" placeholder="••••••••" autocomplete="off" />
+          </label>
+        </div>
+        <div class="row">
+          <label>API host (data center)
+            <select name="host">
+              <option value="https://openapi-sg.easy4ip.com">Singapore (East Asia)</option>
+              <option value="https://openapi-fk.easy4ip.com">Frankfurt (Central Europe)</option>
+              <option value="https://openapi-or.easy4ip.com">Oregon (West US)</option>
+            </select>
+          </label>
+          <label>Default stream quality
+            <select name="defaultStream">
+              <option value="0">HD (streamId=0)</option>
+              <option value="1">SD (streamId=1)</option>
+            </select>
+          </label>
+        </div>
+        <div class="row">
+          <button type="submit">Save</button>
+          <button type="button" class="ghost" id="clear">Clear</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Connection check</h2>
+      <p class="muted-note">Tests that the server can reach Imou with your settings.</p>
+      <div class="row">
+        <button id="test">Test connection</button>
+        <span id="test-result" class="muted-note"></span>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

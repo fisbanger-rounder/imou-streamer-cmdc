@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Multi-view · Imou Streamer</title>
+  <link rel="stylesheet" href="/imou-player.css" />
+  <link rel="stylesheet" href="/styles.css" />
+  <script type="module" src="/imou-player.js"></script>
+  <script type="module" src="/pages/player.js"></script>
+</head>
+<body>
+  <header class="top">
+    <h1>Imou Streamer</h1>
+    <nav>
+      <a href="/">Cameras</a>
+      <a href="/player.html" class="active">Multi-view</a>
+      <a href="/settings.html">Settings</a>
+    </nav>
+  </header>
+  <main>
+    <section class="card">
+      <h2>Multi-camera view</h2>
+      <p class="muted-note">
+        Click any camera on the Cameras page → "Open in multi-view" to pin it, then press
+        <strong>Play all</strong>. Up to 4 streams at once (browser performance limit).
+      </p>
+      <div class="row toolbar">
+        <button id="play-all">Play all</button>
+        <button id="pause-all" class="ghost">Pause all</button>
+        <button id="destroy-all" class="danger">Destroy all</button>
+        <label style="flex:0 0 160px">Layout
+          <select id="layout">
+            <option value="1">1-up</option>
+            <option value="2" selected>2-up</option>
+            <option value="3">3-up</option>
+            <option value="4">4-up</option>
+          </select>
+        </label>
+        <span class="spacer"></span>
+        <a href="/" class="muted-note">← Back to cameras</a>
+      </div>
+    </section>
+    <div id="status"></div>
+    <div id="grid" class="player-grid"></div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Shell(mkdir app public public/WasmLib api api/lib 2>nul & echo ok)",
+      "Shell(xcopy:*)",
+      "Shell(copy:*)",
+      "Shell(node --check api/lib/imou.js)",
+      "Shell(node --check api/lib/config.js)",
+      "Shell(node --check api/accessToken.js)",
+      "Shell(node --check api/getKitToken.js)",
+      "Shell(node --check api/queryDeviceList.js)",
+      "Shell(powershell -NoProfile -Command Get-FileHash public\\imou-player.js -Algorithm SHA256; Get-FileHash imou-player-SDK\\imou-player.js -Algorithm SHA256)",
+      "Shell(powershell -NoProfile -Command (Get-Content public\\WasmLib\\MultiThread\\liblcplay.wasm -Encoding Byte).Length; (Get-Content imou-player-SDK\\WasmLib\\MultiThread\\liblcplay.wasm -Encoding Byte).Length)"
+    ],
+    "deny": [],
+    "defaultMode": "default"
+  }
+}

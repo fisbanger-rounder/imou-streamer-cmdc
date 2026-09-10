@@ -1,0 +1,13 @@
+{
+  "name": "imou-streamer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Web app that streams Imou CCTVs through the official imou-player SDK. Deploys to Vercel.",
+  "scripts": {
+    "dev:api": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "engines": {
+    "node": "20.x"
+  }
+}
