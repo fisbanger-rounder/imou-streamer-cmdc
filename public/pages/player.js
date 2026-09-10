@@ -7,7 +7,7 @@ const QUEUE_KEY = "imou-multi-view-queue";
 const grid = $("#grid");
 const status = $("#status");
 const layoutSel = $("#layout");
-const players = new Map(); // cellId -> imouPlayer instance
+const players = new Map(); // cellIndex -> imouPlayer instance
 
 function gridTemplate() {
   const n = Number(layoutSel.value || 2);
@@ -17,19 +17,42 @@ function gridTemplate() {
   return "repeat(2, 1fr)";
 }
 
-function renderGrid() {
-  const queue = readQueue();
-  const cols = gridTemplate();
-  grid.style.gridTemplateColumns = cols;
-  grid.replaceChildren();
+function readQueue() {
+  try { return JSON.parse(localStorage.getItem(QUEUE_KEY) || "[]"); }
+  catch { return []; }
+}
+
+function writeQueue(q) {
+  localStorage.setItem(QUEUE_KEY, JSON.stringify(q));
+}
+
+// Destroy every running player and empty the map. Must run before the grid
+// is rebuilt — an undestroyed imouPlayer keeps its stream open, and the
+// account's concurrent-stream allowance is small.
+function destroyAll() {
+  for (const p of players.values()) {
+    try { p.destroy(); } catch {}
+  }
   players.clear();
+}
+
+function pauseAll() {
+  for (const p of players.values()) {
+    try { p.pause(); } catch {}
+  }
+}
+
+function renderGrid() {
+  destroyAll();
+  const queue = readQueue();
+  grid.style.gridTemplateColumns = gridTemplate();
+  grid.replaceChildren();
   if (!queue.length) {
-    banner(status, "info", "No cameras pinned yet. Open the Cameras page and click \"Multi-view\" on a device.");
+    banner(status, "info", 'No cameras pinned yet. Open the Cameras page and click "Multi-view" on a device.');
     return;
   }
   queue.slice(0, 4).forEach((entry, idx) => {
-    const cellId = `cell-${idx}`;
-    const stage = el("div", { id: cellId, class: "stage" });
+    const stage = el("div", { id: `stage-${idx}`, class: "stage" });
     const cell = el("div", { class: "player-cell" }, [
       el("div", { class: "label" }, [
         el("span", {}, `${entry.deviceName} · CH${entry.channelId}`),
@@ -39,15 +62,6 @@ function renderGrid() {
     ]);
     grid.appendChild(cell);
   });
-}
-
-function readQueue() {
-  try { return JSON.parse(localStorage.getItem(QUEUE_KEY) || "[]"); }
-  catch { return []; }
-}
-
-function writeQueue(q) {
-  localStorage.setItem(QUEUE_KEY, JSON.stringify(q));
 }
 
 function removeFromQueue(idx) {
@@ -63,16 +77,17 @@ async function playAll() {
     banner(status, "info", "Nothing to play. Pin a camera first.");
     return;
   }
+  destroyAll();
   banner(status, "info", "Requesting kit tokens…");
   const settings = loadSettings();
+  let failures = 0;
   for (let i = 0; i < queue.length; i++) {
     const entry = queue[i];
-    const stage = $(`#cell-${i} .stage`);
-    if (!stage) continue;
-    // Tear down any previous instance in this cell.
-    const existing = players.get(i);
-    if (existing) { try { existing.destroy(); } catch {} players.delete(i); }
-    stage.id = `stage-${i}-${Date.now()}`;
+    const stage = $(`#stage-${i}`);
+    if (!stage) {
+      failures++;
+      continue;
+    }
     try {
       const kit = await apiPost("/api/getKitToken", {
         ...settings,
@@ -80,8 +95,14 @@ async function playAll() {
         channelId: entry.channelId,
         type: 1,
       });
+      if (!kit?.kitToken) {
+        throw new Error("getKitToken returned no kitToken: " + JSON.stringify(kit));
+      }
       const playerConfig = {
         id: stage.id,
+        // imouPlayer locks the canvas to these pixel dimensions at init, so
+        // measure the live cell rather than guessing; the fallbacks cover a
+        // collapsed container (e.g. tab opened in the background).
         width: stage.clientWidth || 640,
         height: stage.clientHeight || 360,
         deviceId: entry.deviceId,
@@ -97,41 +118,36 @@ async function playAll() {
         controls: true,
         controlsConfig: ["play", "volume", "capture", "resolution", "fullScreen"],
         title: `${entry.deviceName} · CH${entry.channelId}`,
-        handleError: (err) => console.error(`[imou-player ${i}]`, err),
+        handleError: (err) => {
+          console.error(`[imou-player ${i}]`, err);
+          banner(status, "error", `Player ${i + 1} error ${err?.errCode ?? "?"}: ${err?.errMsg || err?.description || "see browser console"}`);
+        },
       };
       if (settings.deviceCode) playerConfig.code = settings.deviceCode;
-      const player = new imouPlayer(playerConfig);
-      players.set(i, player);
+      players.set(i, new imouPlayer(playerConfig));
     } catch (e) {
+      failures++;
       stage.innerHTML = `<div style="color:#e0596b;padding:12px;font-size:13px;">Cannot start ${entry.deviceName}: ${e.message}</div>`;
     }
   }
-  banner(status, "ok", "Playing.");
-}
-
-function pauseAll() {
-  for (const p of players.values()) {
-    try { p.pause(); } catch {}
-  }
-}
-
-function destroyAll() {
-  for (const [i, p] of players.entries()) {
-    try { p.destroy(); } catch {}
-    players.delete(i);
+  const started = queue.length - failures;
+  if (started) {
+    banner(status, failures ? "info" : "ok", `Playing ${started}/${queue.length} camera${queue.length === 1 ? "" : "s"}.`);
+  } else {
+    banner(status, "error", `Could not start any of the ${queue.length} camera${queue.length === 1 ? "" : "s"} — see the messages in each cell.`);
   }
 }
 
 $("#play-all").addEventListener("click", playAll);
 $("#pause-all").addEventListener("click", pauseAll);
 $("#destroy-all").addEventListener("click", destroyAll);
-layoutSel.addEventListener("change", renderGrid);
 
-// Auto-resize: the imouPlayer canvas locks to its initial width/height;
-// we recreate instances on layout change so they fit the new grid cell.
+// Changing the layout changes every cell's pixel size, and imouPlayer bakes
+// width/height in at init — so rebuild the grid and re-init anything playing.
 layoutSel.addEventListener("change", () => {
-  // Only re-init if something is already playing; otherwise just rerender.
-  if (players.size) playAll();
+  const wasPlaying = players.size > 0;
+  renderGrid();
+  if (wasPlaying) playAll();
 });
 
 renderGrid();
